@@ -1,11 +1,6 @@
 # Optimizing Incident Management Systems
 ## An Operations Research & Machine Learning Approach
 
-**Authors:**
-- **Divagar S** (CB.SC.U4AIE23223)
-- **Abhishek Pandey** (CB.SC.U4AIE23205)
-- **Prem** (CB.SC.U4AIE23241)
-
 ---
 
 ### 1. Executive Summary & Problem Context
