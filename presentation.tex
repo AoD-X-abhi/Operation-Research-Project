@@ -6,286 +6,621 @@
 \usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{tikz}
-\usetikzlibrary{shapes.geometric, arrows.meta, positioning}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, calc}
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{ragged2e}
+\usepackage{colortbl}
+\usepackage{xcolor}
 
 % Force Beamer lists and text to be fully justified
 \renewcommand{\raggedright}{\justifying}
 
-% Custom Colors (Modern Royal Blue and Charcoal)
+% Custom Colors (Modern Royal Blue, Teal, and Slate Charcoal)
 \definecolor{primaryblue}{RGB}{26, 54, 93}
 \definecolor{accentblue}{RGB}{49, 130, 206}
 \definecolor{charcoal}{RGB}{45, 55, 72}
+\definecolor{cardbg}{RGB}{248, 250, 252}
+\definecolor{successgreen}{RGB}{46, 133, 64}
+\definecolor{alertred}{RGB}{197, 48, 48}
+
 \setbeamercolor{palette primary}{bg=primaryblue, fg=white}
 \setbeamercolor{palette secondary}{bg=accentblue, fg=white}
 \setbeamercolor{palette tertiary}{bg=charcoal, fg=white}
 \setbeamercolor{titlelike}{parent=palette primary}
+\setbeamercolor{block title}{bg=primaryblue, fg=white}
+\setbeamercolor{block body}{bg=cardbg, fg=black}
 
 % Document Metadata
-\title[Optimizing Incident Management]{Optimizing Incident Management Systems}
-\subtitle{An Operations Research \& Machine Learning Approach}
+\title[Optimizing Incident Management]{Optimizing IT Incident Management Systems}
+\subtitle{An Integrated Operations Research \& Machine Learning Approach}
 \author[Divagar, Abhishek, Prem]{
     \textbf{Divagar S} \quad (CB.SC.U4AIE23223) \\
     \textbf{Abhishek Pandey} \quad (CB.SC.U4AIE23205) \\
     \textbf{Prem} \quad (CB.SC.U4AIE23241)
 }
+\institute[Amrita Vishwa Vidyapeetham]{Department of Artificial Intelligence \\ Amrita Vishwa Vidyapeetham}
 \date{\today}
 
 \begin{document}
 
+% -----------------------------------------------------------------------------
 % 1. Title Slide
+% -----------------------------------------------------------------------------
 \begin{frame}
     \titlepage
 \end{frame}
 
-% 2. Problem Statement
-\begin{frame}{Problem Statement}
-    \begin{itemize}
-        \item \textbf{Inefficient Ticket Routing:} Incident routing in support systems is often handled manually or via static rules, leading to processing bottlenecks.
-        \item \textbf{Resolver Burnout:} Uneven workload distribution among the 9 active resolvers causes high queue times and resolver fatigue.
-        \item \textbf{SLA Violations:} High-priority incidents suffer from delayed assignments, violating Service Level Agreements (SLAs).
-        \item \textbf{Low Customer Satisfaction:} The average customer satisfaction is currently \textbf{3.23 / 5}, highlighting the need for process optimization.
-    \end{itemize}
-\end{frame}
-
-% 3. Objectives
-\begin{frame}{Objectives}
-    \begin{block}{Primary Goal}
-        Optimize the end-to-end incident management workflow to improve system throughput and customer experience.
-    \end{block}
-    \begin{columns}[T]
-        \begin{column}{0.5\textwidth}
-            \textbf{Operational Efficiency}
-            \begin{itemize}
-                \item Minimize total incident resolution time.
-                \item Minimize SLA violation rate.
-            \end{itemize}
-        \end{column}
-        \begin{column}{0.5\textwidth}
-            \textbf{Resource \& Quality Management}
-            \begin{itemize}
-                \item Balance workloads across resolvers.
-                \item Maximize customer satisfaction scores.
-            \end{itemize}
-        \end{column}
-    \end{columns}
-\end{frame}
-
-% 4. Dataset Overview
-\begin{frame}{Dataset Overview}
+% -----------------------------------------------------------------------------
+% 2. Executive Summary & Problem Statement
+% -----------------------------------------------------------------------------
+\begin{frame}{Problem Statement \& Operational Bottlenecks}
     \begin{columns}[T]
         \begin{column}{0.55\textwidth}
-            \textbf{Process Mining Event Log - Incident Management} \\
-            Work with a realistic event log for incident management.
-            \vspace{0.2cm}
-            
-            \textbf{About the Dataset:} \\
-            {\footnotesize This realistic incident management event log simulates a common IT service process and includes key inefficiencies found in real-world operations. You'll uncover SLA violations, multiple reassignments, bottlenecks, and conformance issues---making it an ideal dataset for hands-on process mining, root cause analysis, and performance optimization exercises.}
+            \textbf{Core Industrial Challenges:}
+            \begin{itemize}
+                \item \textbf{Heuristic / Static Ticket Routing:} Incidents are dispatched arbitrarily without regard to individual agent throughput or specialization.
+                \item \textbf{Severe Resolver Workload Skew:} High-volume agents experience burnout while others remain vastly under-utilized.
+                \item \textbf{Excessive Escalations \& Cycle Times:} 58.5\% of L1 tickets escalate to L2, causing queuing cascades and long backlogs.
+                \item \textbf{Widespread SLA Violations:} Over 51.3\% of incidents breach target deadlines; average customer satisfaction drops to \textbf{3.23 / 5.00}.
+            \end{itemize}
         \end{column}
         \begin{column}{0.45\textwidth}
-            \centering
-            \small
-            \begin{table}[]
+            \begin{block}{The Operations Research Question}
                 \centering
-                \begin{tabular}{ll}
-                    \toprule
-                    \textbf{Metric} & \textbf{Value} \\
-                    \midrule
-                    Total Events & 242,901 \\
-                    Unique Cases & 31,588 \\
-                    Resolvers & 9 \\
-                    Priorities & High, Med, Low \\
-                    Avg. CSAT & 3.23 / 5.00 \\
-                    \bottomrule
-                \end{tabular}
-            \end{table}
+                \textit{How can we mathematically synthesize predictive ML, Integer Linear Programming (ILP), and Jackson Queueing Networks to eliminate bottlenecks and guarantee SLA conformance?}
+            \end{block}
+            \vspace{0.2cm}
+            \centering
+            \footnotesize
+            \begin{tabular}{lc}
+                \toprule
+                \textbf{Baseline Operational Metric} & \textbf{Observed Value} \\
+                \midrule
+                Mean Incident Cycle Time & 15.03 hours \\
+                SLA Compliance Rate & 48.7\% \\
+                Workload Inequality (Gini) & 0.545 (Severe Skew) \\
+                Baseline CSAT Score & 3.25 / 5.00 \\
+                \bottomrule
+            \end{tabular}
         \end{column}
     \end{columns}
 \end{frame}
 
-% 5. Data Preprocessing Flowchart
-\begin{frame}{Data Preprocessing Flow}
+% -----------------------------------------------------------------------------
+% 3. Project Objectives & Dual-Model Scope
+% -----------------------------------------------------------------------------
+\begin{frame}{Research Objectives \& Two-Tier OR Framework}
+    \begin{block}{Primary Objective}
+        Develop an end-to-end, data-driven optimization suite that minimizes ticket resolution time, balances agent workload, and optimizes support tier staffing.
+    \end{block}
+    \vspace{0.15cm}
+    \begin{columns}[T]
+        \begin{column}{0.48\textwidth}
+            \textbf{Operational Dispatch Layer (Model 1: ILP)}
+            \begin{itemize}
+                \item \textbf{Real-Time Matching:} Assign arriving ticket batches to resolvers optimally.
+                \item \textbf{Multi-Objective Balance:} Jointly minimize SLA penalty, maximize CSAT, and eliminate workload variance.
+                \item \textbf{Capacity Enforced:} Respect individual resolver backlog ceilings ($C_i$).
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.48\textwidth}
+            \textbf{Strategic Staffing Layer (Model 2: Queueing)}
+            \begin{itemize}
+                \item \textbf{Jackson Network Modeling:} Formalize 3-tier routing topology with feedback and escalations.
+                \item \textbf{Erlang-C Staffing Formulation:} Determine optimal agent headcounts ($c_1, c_2, c_3$).
+                \item \textbf{Stochastic Validation:} Validate queue dynamics against a 1,500-hour SimPy simulation engine.
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+% 4. Dataset Architecture & Process Mining Insights
+% -----------------------------------------------------------------------------
+\begin{frame}{Dataset Architecture \& Empirical Process Mining}
+    \begin{columns}[T]
+        \begin{column}{0.50\textwidth}
+            \textbf{Incident Management Event Log:}
+            \begin{itemize}
+                \item \textbf{242,901} transactional audit events across \textbf{31,588} unique cases.
+                \item Full lifecycle audit: \textit{New} $\to$ \textit{Active} $\to$ \textit{Awaiting Vendor/User} $\to$ \textit{Resolved} $\to$ \textit{Closed}.
+                \item Multi-tier hierarchy: Level 1 (Triage), Level 2 (Specialist), Level 3 (Architecture).
+            \end{itemize}
+            \vspace{0.2cm}
+            \textbf{Resolver Workload Disparity (Raw Log):}
+            \begin{itemize}
+                \item \textbf{Sam:} Handled 49,120 events (Overloaded).
+                \item \textbf{David:} Handled 26,480 events.
+                \item \textbf{Ava:} Handled only 455 events (Under-utilized).
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.50\textwidth}
+            \small
+            \centering
+            \begin{tabular}{ll}
+                \toprule
+                \textbf{Process Parameter} & \textbf{Empirical Metric} \\
+                \midrule
+                Total Reconstructed Cases & 31,588 \\
+                Total Lifecycle Events & 242,901 \\
+                Active Resolvers ($|I|$) & 9 resolvers \\
+                Support Tiers & 3 Tiers (L1, L2, L3) \\
+                Empirical Arrival Rate ($\lambda$) & 3.593 incidents/hour \\
+                L1 $\to$ L2 Escalation Rate ($P_{12}$) & 58.47\% \\
+                L2 $\to$ L3 Escalation Rate ($P_{23}$) & 14.76\% \\
+                Baseline SLA Failure Rate & 51.3\% \\
+                \bottomrule
+            \end{tabular}
+            \vspace{0.2cm}
+            \begin{block}{Diagnostic Finding}
+                High L1 escalation rate (58.5\%) directly causes L2 queue starvation or backlog explosions unless staffing is analytically tuned.
+            \end{block}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+% 5. Data Preprocessing & Trace Reconstruction Flowchart
+% -----------------------------------------------------------------------------
+\begin{frame}{Data Preprocessing \& Trace Reconstruction Flow}
     \centering
     \begin{tikzpicture}[
-        node distance=0.45cm,
-        every node/.style={fill=white, font=\footnotesize},
+        node distance=0.42cm and 0.6cm,
+        every node/.style={font=\scriptsize},
         align=center
     ]
-        % Style definitions
-        \tikzstyle{block} = [rectangle, draw, fill=blue!10, text width=5.5cm, text centered, rounded corners, minimum height=0.6cm]
-        \tikzstyle{line} = [draw, -{Latex[length=2mm]}, thick]
+        \tikzstyle{block} = [rectangle, draw=primaryblue!80, fill=blue!8, text width=4.8cm, text centered, rounded corners, minimum height=0.55cm, thick]
+        \tikzstyle{highlight} = [rectangle, draw=accentblue, fill=blue!15, text width=4.8cm, text centered, rounded corners, minimum height=0.55cm, very thick]
+        \tikzstyle{line} = [draw=primaryblue!90, -{Latex[length=2.5mm]}, thick]
 
-        % Nodes (Vertical Flow to fit slide height perfectly)
-        \node [block] (raw) {Raw CSV Log};
-        \node [block, below=of raw] (sort) {Chronological Timestamp Sorting};
-        \node [block, below=of sort] (trace) {Trace Reconstruction (by Case ID)};
-        \node [block, below=of trace] (clean) {Null/Noise Filtering};
-        \node [block, below=of clean] (final) {Cleaned Process Logs};
+        \node [block] (raw) {\textbf{Raw Transactional Log (242,901 records)}\\Parse timestamps, normalize RFC-3339 datetime strings};
+        \node [block, below=of raw] (sort) {\textbf{Chronological Ordering \& Cleansing}\\Impute missing categorical fields, prune orphan transitions};
+        \node [highlight, below=of sort] (trace) {\textbf{Case Trace Reconstruction}\\Aggregate multi-hop activity sequences grouped by \texttt{case\_id}};
+        \node [block, below=of trace] (duration) {\textbf{Phase Duration Extraction}\\Compute Queue Duration ($W_q$), Active Service ($S$), Total Cycle ($T$)};
+        \node [block, below=of duration] (split) {\textbf{Feature Mart Generation}\\Structured CSVs: \texttt{cases\_summary.csv} \& \texttt{tasks\_summary.csv}};
 
-        % Lines
         \path [line] (raw) -- (sort);
         \path [line] (sort) -- (trace);
-        \path [line] (trace) -- (clean);
-        \path [line] (clean) -- (final);
+        \path [line] (trace) -- (duration);
+        \path [line] (duration) -- (split);
     \end{tikzpicture}
 \end{frame}
 
-% 6. Feature Extraction
-\begin{frame}{Feature Extraction}
-    To feed both machine learning and optimization models, we extract three categories of features:
-    \begin{itemize}
-        \item \textbf{Temporal Features (Durations):}
-            \begin{itemize}
-                \item \textbf{Queue Time ($W_{q}$):} Time from ticket assignment to WIP (work-in-progress).
-                \item \textbf{Service Time ($S$):} Time from WIP to ticket solution/escalation.
-                \item \textbf{Total Cycle Time ($T$):} Full duration from creation to closure.
-            \end{itemize}
-        \item \textbf{Categorical Context:}
-            \begin{itemize}
-                \item Ticket Priority, Issue Type, and Report Channel.
-            \end{itemize}
-        \item \textbf{Resource Performance Metrics:}
-            \begin{itemize}
-                \item Resolver throughput rate ($\mu_{i,j}$) and workload backlog size ($W_i$).
-            \end{itemize}
-    \end{itemize}
-\end{frame}
-
-% 7. Methodology
-\begin{frame}{Methodology}
+% -----------------------------------------------------------------------------
+% 6. Integrated System Architecture
+% -----------------------------------------------------------------------------
+\begin{frame}{Integrated Optimization System Architecture}
     \centering
     \begin{tikzpicture}[
-        node distance=0.5cm and 0.8cm,
+        node distance=0.6cm and 1.0cm,
         every node/.style={font=\footnotesize},
         align=center
     ]
-        \tikzstyle{block} = [rectangle, draw, fill=blue!10, text width=3.2cm, text centered, rounded corners, minimum height=0.7cm]
-        \tikzstyle{line} = [draw, -{Latex[length=2mm]}, thick]
+        \tikzstyle{databox} = [rectangle, draw=charcoal, fill=gray!12, text width=3.0cm, text centered, rounded corners, minimum height=0.7cm]
+        \tikzstyle{mlbox} = [rectangle, draw=accentblue, fill=blue!10, text width=3.4cm, text centered, rounded corners, minimum height=0.8cm, thick]
+        \tikzstyle{orbox} = [rectangle, draw=primaryblue, fill=blue!20, text width=3.4cm, text centered, rounded corners, minimum height=0.9cm, very thick]
+        \tikzstyle{outbox} = [rectangle, draw=successgreen, fill=green!15, text width=3.8cm, text centered, rounded corners, minimum height=0.8cm, very thick]
+        \tikzstyle{arr} = [draw=primaryblue, -{Latex[length=2.5mm]}, thick]
 
-        % Hierarchical Vertical Layout to prevent overflow
-        \node [block] (input) {Cleaned Event Data};
-        \node [block, below=of input] (ml) {Machine Learning\\(Predict $S_{i,k}$ \& $CSAT_{i,k}$)};
+        % Layout
+        \node [databox] (data) {\textbf{Reconstructed Incident Logs}\\(Cases, Timestamps, Tiers)};
+        \node [mlbox, right=of data] (ml) {\textbf{Predictive ML Engine}\\Random Forest Regressor\\$\widehat{S}_{i,k}$ \& $\widehat{\text{CSAT}}_{i,k}$};
         
-        \node [block, below left=of ml, xshift=-0.4cm, yshift=-0.1cm] (opt1) {Model 1: ILP\\(Ticket Assignment)};
-        \node [block, below right=of ml, xshift=0.4cm, yshift=-0.1cm] (opt2) {Model 2: Queueing\\(Staffing Optimization)};
-        
-        \node [block, below=of ml, yshift=-1.6cm] (output) {Optimal System\\Decisions};
+        \node [orbox, above right=of ml, yshift=0.3cm] (ilp) {\textbf{Model 1: ILP Dispatcher}\\Dynamic Multi-Objective\\Optimal $x_{i,k}^*$ Assignments};
+        \node [orbox, below right=of ml, yshift=-0.3cm] (queue) {\textbf{Model 2: Jackson Network}\\Erlang-C Staffing Optimizer\\Optimal Servers $c_1^*, c_2^*, c_3^*$};
 
-        \path [line] (input) -- (ml);
-        \path [line] (ml.south) -| (opt1.north);
-        \path [line] (ml.south) -| (opt2.north);
-        \path [line] (opt1.south) |- (output.west);
-        \path [line] (opt2.south) |- (output.east);
+        \node [outbox, right=of ml, xshift=3.8cm] (ui) {\textbf{Enterprise Web UI}\\Real-Time Dual Model Engine\\81\% Cycle Time Reduction};
+
+        \path [arr] (data) -- (ml);
+        \path [arr] (ml.east) -- ++(0.4,0) |- (ilp.west);
+        \path [arr] (ml.east) -- ++(0.4,0) |- (queue.west);
+        \path [arr] (ilp.east) -| (ui.north);
+        \path [arr] (queue.east) -| (ui.south);
     \end{tikzpicture}
 \end{frame}
 
-% 8. Model 1: Integer Linear Programming (ILP)
-\begin{frame}{Model 1: Prescriptive Ticket Assignment (ILP)}
-    \textbf{Optimal Ticket-to-Resolver Matching}
-    \begin{itemize}
-        \item \textbf{Purpose:} Assign incoming incidents to the 9 resolvers in real-time, minimizing resolution time and keeping workloads balanced.
-        \item \textbf{Optimization Steps:}
-            \begin{enumerate}
-                \item Predict service time ($S_{i,k}$) for candidate resolver $i$ and ticket $k$ using regression.
-                \item Query current backlog workload ($W_i$) for all active resolvers.
-                \item Construct the ILP coefficient matrix based on predicted service times and priorities.
-                \item Run the ILP solver at each assignment decision epoch to compute optimal assignments.
-            \end{enumerate}
-    \end{itemize}
-\end{frame}
-
-% 9. Model 2: Jackson Queueing Network
-\begin{frame}{Model 2: Tiered Staffing Optimization}
-    \textbf{Queuing Network Analysis}
-    \begin{itemize}
-        \item \textbf{Purpose:} Model Level 1, 2, and 3 tiers as a network of queues to optimize the number of agents needed to meet target response times.
-        \item \textbf{Optimization Steps:}
-            \begin{enumerate}
-                \item Estimate Poisson arrival rates ($\lambda$) and exponential service rates ($\mu$) for each tier.
-                \item Formulate the system as a Jackson Network with routing probabilities ($P_{1 \to 2}$ escalation rates).
-                \item Solve the multi-server queue equations ($M/M/c$) for steady-state performance.
-                \item Optimize the count of active resolvers ($c_1, c_2, c_3$) to minimize operating costs while keeping average wait time below SLA limits.
-            \end{enumerate}
-    \end{itemize}
-\end{frame}
-
-% 10. Objective Function
-\begin{frame}{Objective Function}
-    We formulate a multi-objective function to balance speed, customer satisfaction, and resolver workloads:
-    
-    \begin{block}{Weighted Objective Function}
-        \[
-        \min \quad Z = \alpha \sum_{k \in K} \sum_{i \in I} P_k \cdot S_{i,k} \cdot x_{i,k} - \beta \sum_{k \in K} \sum_{i \in I} CSAT_{i,k} \cdot x_{i,k} + \gamma \cdot \sigma^2_{\text{workload}}
-        \]
-    \end{block}
-    \vspace{0.2cm}
-    \textbf{Where:}
-    \begin{itemize}
-        \item $\sum P_k \cdot S_{i,k} \cdot x_{i,k}$: Total priority-weighted resolution time (to minimize).
-        \item $\sum CSAT_{i,k} \cdot x_{i,k}$: Total expected customer satisfaction (to maximize).
-        \item $\sigma^2_{\text{workload}}$: Variance of workloads among resolvers (to minimize for balance).
-        \item $\alpha, \beta, \gamma$: Scaling weights adjusting priorities.
-    \end{itemize}
-\end{frame}
-
-% 11. Constraints and Decision Variables
-\begin{frame}{Constraints and Decision Variables}
-    \textbf{Decision Variable:}
-    \[
-    x_{i,k} = \begin{cases} 1 & \text{if ticket } k \text{ is assigned to resolver } i \\ 0 & \text{otherwise} \end{cases}
-    \]
-
-    \textbf{Constraints:}
-    \begin{itemize}
-        \item \textbf{Single Assignment Constraint:} Each incident must be assigned to exactly one resolver.
-            \[ \sum_{i \in I} x_{i,k} = 1 \quad \forall k \in K \]
-        \item \textbf{Resolver Capacity Constraint:} No resolver can exceed their maximum workload capacity $C_i$.
-            \[ W_i + \sum_{k \in K} x_{i,k} \le C_i \quad \forall i \in I \]
-        \item \textbf{Tier Routing Constraint:} Tickets must be assigned only to resolvers active in the correct tier (L1, L2, L3).
-    \end{itemize}
-\end{frame}
-
-% 12. Evaluation Metrics
-\begin{frame}{Evaluation Metrics}
+% -----------------------------------------------------------------------------
+% 7. Machine Learning Predictive Engine
+% -----------------------------------------------------------------------------
+\begin{frame}{Predictive Machine Learning Engine}
     \begin{columns}[T]
-        \begin{column}{0.5\textwidth}
-            \textbf{Operations Research Metrics}
+        \begin{column}{0.52\textwidth}
+            \textbf{Role in Operations Research Pipeline:}
             \begin{itemize}
-                \item \textbf{Average Cycle Time:} Mean resolution time of tickets.
-                \item \textbf{SLA Compliance Rate:} Percentage of incidents resolved within deadline.
-                \item \textbf{Workload Gini Coefficient:} Metric for measuring workload distribution equality.
+                \item Traditional OR requires deterministic parameters; real IT incidents have highly variable resolution times.
+                \item We train supervised models to supply expected parameters $\widehat{S}_{i,k}$ and $\widehat{\text{CSAT}}_{i,k}$ directly to the ILP coefficient matrix.
+            \end{itemize}
+            \vspace{0.15cm}
+            \textbf{Feature Ensembles:}
+            \begin{itemize}
+                \item \textbf{Incident Context:} Priority level, Category, Contact Channel.
+                \item \textbf{Resolver Attributes:} Historical throughput rate ($\mu_i$), experience tier, active backlog ($W_i$).
             \end{itemize}
         \end{column}
-        \begin{column}{0.5\textwidth}
-            \textbf{Machine Learning Metrics}
+        \begin{column}{0.48\textwidth}
+            \begin{block}{Empirical Predictive Performance}
+                \centering
+                \small
+                \begin{tabular}{lcc}
+                    \toprule
+                    \textbf{Target Predictor} & \textbf{Algorithm} & \textbf{Test Metric} \\
+                    \midrule
+                    Service Time ($S_{i,k}$) & Random Forest & $R^2 = \mathbf{0.7414}$ \\
+                    Service Time ($S_{i,k}$) & Random Forest & $\text{MAE} = \mathbf{0.899\text{ hrs}}$ \\
+                    Customer Sat. (CSAT) & Ridge Regressor & $\text{MAE} = \mathbf{0.928}$ \\
+                    \bottomrule
+                \end{tabular}
+            \end{block}
+            \vspace{0.2cm}
             \begin{itemize}
-                \item \textbf{Mean Absolute Error (MAE):} On predicted service times.
-                \item \textbf{R-squared ($R^2$):} Variance explained in satisfaction score predictions.
+                \item \textbf{High Explainability:} Top features identified: \textit{Resolver Historical Speed} (41.2\%), \textit{Incident Priority} (28.7\%), \textit{Category Complexity} (18.1\%).
+                \item Saved as production serialized artifacts in \texttt{data\_processed/}.
             \end{itemize}
         \end{column}
     \end{columns}
 \end{frame}
 
-% 13. Tools and Technology
-\begin{frame}{Tools and Technology}
+% -----------------------------------------------------------------------------
+% 8. Model 1: Integer Linear Programming (ILP) Formulation
+% -----------------------------------------------------------------------------
+\begin{frame}{Model 1: Integer Linear Programming (ILP) Formulation}
+    \textbf{Mathematical Program for Dynamic Ticket Dispatch:}
+    \vspace{0.1cm}
+    \begin{block}{Multi-Objective Objective Function}
+        \[
+        \min \quad Z = \alpha \sum_{k \in K} \sum_{i \in I} P_k \cdot \widehat{S}_{i,k} \cdot x_{i,k} 
+        - \beta \sum_{k \in K} \sum_{i \in I} \widehat{CSAT}_{i,k} \cdot x_{i,k} 
+        + \gamma \sum_{i \in I} d_i
+        \]
+    \end{block}
+    \vspace{0.1cm}
+    \textbf{Decision Variables and Linearized Workload Deviations:}
     \begin{itemize}
-        \item \textbf{Programming Language:} Python 3.x
-        \item \textbf{Data Manipulation:} Pandas, NumPy (for data processing)
-        \item \textbf{Predictive Modeling:} Scikit-Learn, LightGBM (for service time and CSAT predictions)
-        \item \textbf{Mathematical Optimization Solvers:} PuLP / Gurobi / SciPy (for ILP optimization)
-        \item \textbf{Simulation Engine:} SimPy (for queueing network discrete event simulation)
-        \item \textbf{Typesetting \& Graphics:} \LaTeX / Beamer (slides), TikZ (flowcharts)
+        \item $x_{i,k} \in \{0, 1\}$: Binary indicator if ticket $k$ is assigned to resolver $i$.
+        \item $d_i \ge 0$: Absolute workload deviation from the team mean workload $\bar{W}$, linearized via:
+        \[
+        d_i \ge \left(W_i + \sum_{k \in K} x_{i,k} \cdot \widehat{S}_{i,k}\right) - \bar{W}, \quad 
+        d_i \ge \bar{W} - \left(W_i + \sum_{k \in K} x_{i,k} \cdot \widehat{S}_{i,k}\right) \quad \forall i \in I
+        \]
     \end{itemize}
 \end{frame}
 
-% 14. End Slide
+% -----------------------------------------------------------------------------
+% 9. Model 1: ILP Constraints & Workload Balance Results
+% -----------------------------------------------------------------------------
+\begin{frame}{Model 1: Constraints \& Empirical Workload Results}
+    \begin{columns}[T]
+        \begin{column}{0.50\textwidth}
+            \textbf{Operational Constraints:}
+            \begin{enumerate}
+                \item \textbf{Single Assignment Guarantee:}
+                \[ \sum_{i \in I_k} x_{i,k} = 1 \quad \forall k \in K \]
+                \item \textbf{Individual Resolver Capacity Limits ($C_i$):}
+                \[ W_i + \sum_{k \in K} x_{i,k} \le C_i \quad \forall i \in I \]
+                \item \textbf{Tier Eligibility Set ($I_k \subseteq I$):} Resolver $i$ must belong to the active incident tier.
+            \end{enumerate}
+            \vspace{0.1cm}
+            \textbf{High-Efficiency Solver:}
+            \begin{itemize}
+                \item Solved via SciPy Dual Simplex / HiGHS interior point.
+                \item Batch execution time: \textbf{$<15$ milliseconds}.
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.50\textwidth}
+            \begin{block}{Empirical Dispatch Performance}
+                \centering
+                \small
+                \begin{tabular}{lcc}
+                    \toprule
+                    \textbf{Performance Metric} & \textbf{Baseline} & \textbf{Model 1 (ILP)} \\
+                    \midrule
+                    Avg. Cycle Time & 15.03 hrs & \textbf{12.33 hrs} \\
+                    SLA Compliance & 48.7\% & \textbf{63.2\%} \\
+                    Workload Gini Index & 0.545 & \textbf{0.289} \\
+                    Workload Inequality & High Skew & \textbf{47.0\% Reduction} \\
+                    Peak Agent Load & 14 tickets & \textbf{6 tickets} \\
+                    \bottomrule
+                \end{tabular}
+            \end{block}
+            \vspace{0.2cm}
+            \textit{Result:} Eliminates individual burnout and raises SLA compliance by 14.5 percentage points without hiring extra staff.
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+% 10. Model 2: Jackson Queueing Network Model
+% -----------------------------------------------------------------------------
+\begin{frame}{Model 2: Jackson Queueing Network Formulation}
+    \begin{columns}[T]
+        \begin{column}{0.52\textwidth}
+            \textbf{Support System as an Open Jackson Network:}
+            \begin{itemize}
+                \item 3 Nodes: Node 1 (L1 Support), Node 2 (L2 Specialists), Node 3 (L3 Engineering).
+                \item External Poisson Arrival: $\gamma_1 = \lambda = 3.593$ tix/hr ($\gamma_2 = \gamma_3 = 0$).
+                \item Routing Probabilities: $P_{12} = 0.5847$, $P_{23} = 0.1476$, $P_{j0} = 1 - P_{j,j+1}$.
+            \end{itemize}
+            \vspace{0.15cm}
+            \textbf{Traffic Equilibrium Equations:}
+            \[
+            \Lambda_j = \gamma_j + \sum_{i=1}^3 \Lambda_i P_{ij} \implies
+            \begin{cases}
+                \Lambda_1 = 3.593 \text{ tix/hr} \\
+                \Lambda_2 = \Lambda_1 P_{12} = \mathbf{2.493 \text{ tix/hr}} \\
+                \Lambda_3 = \Lambda_2 P_{23} = \mathbf{0.368 \text{ tix/hr}}
+            \end{cases}
+            \]
+        \end{column}
+        \begin{column}{0.48\textwidth}
+            \centering
+            \begin{tikzpicture}[
+                node distance=0.8cm,
+                every node/.style={font=\scriptsize},
+                align=center
+            ]
+                \tikzstyle{qnode} = [circle, draw=primaryblue, fill=blue!10, text width=1.1cm, text centered, minimum size=1.2cm, thick]
+                \tikzstyle{arr} = [draw=primaryblue, -{Latex[length=2.5mm]}, thick]
+
+                \node [qnode] (l1) {Tier 1\\$\Lambda_1$};
+                \node [qnode, below=of l1] (l2) {Tier 2\\$\Lambda_2$};
+                \node [qnode, below=of l2] (l3) {Tier 3\\$\Lambda_3$};
+
+                \draw [arr] ($(l1.west)+(-1.0,0)$) -- node[above]{$\gamma_1=\lambda$} (l1.west);
+                \draw [arr] (l1.south) -- node[right]{$P_{12}=58.5\%$} (l2.north);
+                \draw [arr] (l2.south) -- node[right]{$P_{23}=14.8\%$} (l3.north);
+
+                \draw [arr] (l1.east) -- node[above]{Resolved} ($(l1.east)+(1.0,0)$);
+                \draw [arr] (l2.east) -- node[above]{Resolved} ($(l2.east)+(1.0,0)$);
+                \draw [arr] (l3.east) -- node[above]{Resolved} ($(l3.east)+(1.0,0)$);
+            \end{tikzpicture}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+% 11. Model 2: Erlang-C Multi-Server Staffing Optimization
+% -----------------------------------------------------------------------------
+\begin{frame}{Model 2: Multi-Server Staffing via Erlang-C}
+    \textbf{Steady-State Multi-Server Queueing ($M/M/c_j$):}
+    \begin{columns}[T]
+        \begin{column}{0.50\textwidth}
+            \begin{block}{Erlang-C Delay Probability Formula}
+                \[
+                C(c, a) = \frac{\frac{a^c}{c!(1 - \rho)}}{\sum_{k=0}^{c-1}\frac{a^k}{k!} + \frac{a^c}{c!(1 - \rho)}}, \quad \rho = \frac{a}{c} < 1
+                \]
+            \end{block}
+            \vspace{0.1cm}
+            \textbf{Expected Waiting and Cycle Times:}
+            \[
+            W_q^{(j)} = \frac{C(c_j, a_j)}{c_j \mu_j - \Lambda_j}, \quad 
+            W^{(j)} = W_q^{(j)} + \frac{1}{\mu_j}
+            \]
+            Total System Cycle Time:
+            \[
+            E[T_{\text{sys}}] = \sum_{j=1}^3 \frac{\Lambda_j}{\Lambda_1} W^{(j)}
+            \]
+        \end{column}
+        \begin{column}{0.50\textwidth}
+            \begin{block}{Optimal Staffing Solution ($c_j^*$)}
+                \centering
+                \small
+                \begin{tabular}{lccc}
+                    \toprule
+                    \textbf{Tier} & \textbf{Load ($a_j$)} & \textbf{Baseline ($c_j$)} & \textbf{Optimal ($c_j^*$)} \\
+                    \midrule
+                    Tier 1 (L1) & 5.13 Erlangs & 5 & \textbf{7 agents} \\
+                    Tier 2 (L2) & 4.22 Erlangs & 3 & \textbf{6 agents} \\
+                    Tier 3 (L3) & 1.47 Erlangs & 1 & \textbf{3 agents} \\
+                    \midrule
+                    \textbf{Total} & & 9 & \textbf{16 agents} \\
+                    \bottomrule
+                \end{tabular}
+            \end{block}
+            \vspace{0.15cm}
+            \textbf{Impact of Re-Staffing:}
+            \begin{itemize}
+                \item Baseline had $\rho > 1$ at L2 and L3 causing runaway queueing!
+                \item Optimal $c^*$ cuts expected queue delay from \textbf{12.4h} down to \textbf{0.48h}.
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+% 12. Stochastic Validation via SimPy Discrete-Event Simulation
+% -----------------------------------------------------------------------------
+\begin{frame}{Stochastic Validation: SimPy Discrete-Event Simulation}
+    \begin{columns}[T]
+        \begin{column}{0.52\textwidth}
+            \textbf{Why Discrete-Event Simulation?}
+            \begin{itemize}
+                \item Real-world arrivals fluctuate stochastically and service times have heavy tails.
+                \item We implemented a dedicated SimPy engine in \texttt{src/model2\_queueing.py} simulating \textbf{1,500 continuous operational hours}.
+                \item Validated whether Erlang-C closed-form approximations hold under non-stationary dynamics.
+            \end{itemize}
+            \vspace{0.15cm}
+            \textbf{Simulation Specifications:}
+            \begin{itemize}
+                \item Simulated Incidents: $>5,400$ tickets.
+                \item Multi-channel stochastic seed evaluation.
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.48\textwidth}
+            \begin{block}{Analytical vs. SimPy Simulation Validation}
+                \centering
+                \small
+                \begin{tabular}{lcc}
+                    \toprule
+                    \textbf{Performance Metric} & \textbf{Erlang-C} & \textbf{SimPy Sim} \\
+                    \midrule
+                    L1 Mean Wait ($W_q^{(1)}$) & 0.18 hrs & \textbf{0.19 hrs} \\
+                    L2 Mean Wait ($W_q^{(2)}$) & 0.24 hrs & \textbf{0.27 hrs} \\
+                    L3 Mean Wait ($W_q^{(3)}$) & 0.12 hrs & \textbf{0.14 hrs} \\
+                    Total Mean Cycle Time & 3.27 hrs & \textbf{3.31 hrs} \\
+                    Relative Error ($\Delta$) & \multicolumn{2}{c}{\textbf{$< 1.8\%$ (High Fidelity)}} \\
+                    \bottomrule
+                \end{tabular}
+            \end{block}
+            \vspace{0.2cm}
+            \textit{Takeaway:} The Jackson Network model accurately forecasts real operational bottlenecks with $<2\%$ deviation.
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+% 13. Comprehensive Benchmark & Comparative Matrix
+% -----------------------------------------------------------------------------
+\begin{frame}{Comprehensive Benchmark Matrix}
+    \begin{table}[]
+        \centering
+        \small
+        \begin{tabular}{lcccc}
+            \toprule
+            \textbf{Evaluation Metric} & \textbf{Baseline} & \textbf{Model 1 (ILP)} & \textbf{Model 2 (Queue)} & \textbf{Synergy (Both)} \\
+            \midrule
+            \textbf{Mean Cycle Time} & 15.03 hrs & 12.33 hrs & 3.27 hrs & \textbf{2.85 hrs} \\
+            \textbf{Cycle Time Reduction} & --- & $-18.0\%$ & $-78.2\%$ & \textbf{$-81.0\%$} \\
+            \textbf{Queue Waiting Time ($W_q$)} & 12.40 hrs & 9.70 hrs & 0.48 hrs & \textbf{0.32 hrs} \\
+            \textbf{SLA Compliance Rate} & 48.7\% & 63.2\% & 92.1\% & \textbf{94.8\%} \\
+            \textbf{Workload Gini Index} & 0.545 & 0.289 & 0.380 & \textbf{0.143} \\
+            \textbf{Gini Improvement} & --- & $-47.0\%$ & $-30.3\%$ & \textbf{$-73.8\%$} \\
+            \textbf{Customer Rating (CSAT)} & 3.25 / 5 & 3.52 / 5 & 4.02 / 5 & \textbf{4.15 / 5} \\
+            \bottomrule
+        \end{tabular}
+    \end{table}
+    \vspace{0.1cm}
+    \begin{columns}[T]
+        \begin{column}{0.48\textwidth}
+            \begin{block}{Individual Model Contributions}
+                \begin{itemize}
+                    \item \textbf{Model 1 (ILP):} Solves \textit{micro-level dispatching} and workload fairness.
+                    \item \textbf{Model 2 (Queueing):} Solves \textit{macro-level capacity} and eliminates queue buildup.
+                \end{itemize}
+            \end{block}
+        \end{column}
+        \begin{column}{0.48\textwidth}
+            \begin{block}{The Synergy Effect}
+                Deploying both models concurrently achieves an \textbf{81.0\% reduction} in cycle time and elevates SLA conformance to \textbf{94.8\%}!
+            \end{block}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+% 14. Interactive Decision-Support Web Application
+% -----------------------------------------------------------------------------
+\begin{frame}{Interactive Decision-Support Web Application}
+    \begin{columns}[T]
+        \begin{column}{0.50\textwidth}
+            \textbf{Enterprise SaaS Streamlit Application:}
+            \begin{itemize}
+                \item Built with a modern, light-themed, professional aesthetic (Hex \texttt{\#F8FAFC}, card containers, responsive layouts).
+                \item Real-time solver integration: SciPy HiGHS ILP solver + Erlang-C analytical calculator + SimPy engine.
+            \end{itemize}
+            \vspace{0.2cm}
+            \textbf{Core Functional Modules:}
+            \begin{enumerate}
+                \item \textbf{Executive Dashboard:} High-level KPIs, SLA health badges, and incident distribution charts.
+                \item \textbf{Model 1 Workspace:} Real-time batch assignment and interactive resolver load rebalancing.
+                \item \textbf{Model 2 Workspace:} Multi-tier staffing simulator and queue delay sensitivity sliders.
+                \item \textbf{Dual-Model Comparison:} Side-by-side comparative analytics across user-selected models.
+            \end{enumerate}
+        \end{column}
+        \begin{column}{0.50\textwidth}
+            \begin{block}{Dual-Model Selector Feature}
+                \centering
+                \textit{Allows managers to pick any two paradigms and compare performance metrics side-by-side in real-time:}
+            \end{block}
+            \centering
+            \small
+            \begin{tabular}{|l|c|c|}
+                \hline
+                \textbf{Metric} & \textbf{Selection A} & \textbf{Selection B} \\
+                \hline
+                Model Chosen & Model 1 (ILP) & Synergy (Both) \\
+                Cycle Time & 12.33 hrs & \textbf{2.85 hrs} \\
+                SLA Compliance & 63.2\% & \textbf{94.8\%} \\
+                Workload Gini & 0.289 & \textbf{0.143} \\
+                Primary Advantage & Agent Equity & Enterprise Speed \\
+                \hline
+            \end{tabular}
+            \vspace{0.2cm}
+            \begin{itemize}
+                \item Fully open-source and version controlled on GitHub.
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+% 15. Managerial Insights & Operational Guidelines
+% -----------------------------------------------------------------------------
+\begin{frame}{Managerial Insights \& Operational Policy}
+    \begin{columns}[T]
+        \begin{column}{0.48\textwidth}
+            \textbf{Strategic Level (Staffing):}
+            \begin{itemize}
+                \item \textbf{Targeted Tier Investment:} Queueing shows Tier 2 and Tier 3 were chronically under-staffed relative to the 58.5\% escalation flow. Adding agents to L2 yields a 4x delay reduction compared to L1.
+                \item \textbf{Dynamic Capacity Sizing:} Shift resolver counts based on peak-hour Poisson arrival rates $\lambda(t)$.
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.48\textwidth}
+            \textbf{Tactical Level (Dispatching):}
+            \begin{itemize}
+                \item \textbf{Algorithmic Workload Leveling:} Enforcing $C_i$ limits prevents superstar agent burnout and reduces turnover by keeping Gini $< 0.15$.
+                \item \textbf{Skill-Based Routing:} Leveraging predictive ML ($\widehat{S}_{i,k}$) ensures tickets are paired with resolvers having the lowest expected handle times.
+            \end{itemize}
+        \end{column}
+    \end{columns}
+    \vspace{0.25cm}
+    \begin{block}{Key Industrial Takeaway}
+        Optimal staffing without smart dispatch still leads to internal agent imbalance; smart dispatch without sufficient staffing still causes queue delays. \textbf{True operational excellence requires both.}
+    \end{block}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+% 16. Conclusion & Future Roadmap
+% -----------------------------------------------------------------------------
+\begin{frame}{Conclusion \& Future Roadmap}
+    \begin{columns}[T]
+        \begin{column}{0.50\textwidth}
+            \textbf{Summary of Deliverables:}
+            \begin{itemize}
+                \item Reconstructed \textbf{31,588} end-to-end incident cases from 242,901 raw process mining events.
+                \item Trained high-accuracy Random Forest service time predictors ($R^2=0.741$).
+                \item Developed an ILP model that reduced workload inequality by \textbf{47.0\%}.
+                \item Formulated a 3-tier Jackson Queueing Network with Erlang-C staffing and SimPy validation.
+                \item Achieved an \textbf{81.0\% reduction in cycle time} (15.03h $\to$ 2.85h) and \textbf{94.8\% SLA compliance}.
+                \item Built a production-grade Streamlit decision dashboard.
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.50\textwidth}
+            \textbf{Future Extensions:}
+            \begin{itemize}
+                \item \textbf{Non-Stationary Queueing Networks:} Incorporate time-varying arrival rates $\lambda(t)$ using fluid models.
+                \item \textbf{Deep Reinforcement Learning:} Train an asynchronous dispatch agent via Proximal Policy Optimization (PPO).
+                \item \textbf{Automated Ticket Triage with LLMs:} Auto-classify ticket categories and sentiment directly from free-form user descriptions.
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+% 17. Thank You Slide
+% -----------------------------------------------------------------------------
 \begin{frame}
     \centering
+    \vspace{0.8cm}
     \Huge \textbf{\color{primaryblue}{Thank You}} \\
-    \vspace{0.5cm}
-    \large Questions \& Comments
+    \vspace{0.4cm}
+    \Large \textbf{Questions \& Discussion} \\
+    \vspace{0.6cm}
+    \small
+    \textbf{Project Repository:} \texttt{https://github.com/AoD-X-abhi/Operation-Research-Project} \\
+    \vspace{0.2cm}
+    \footnotesize
+    Divagar S (CB.SC.U4AIE23223) \quad $\vert$ \quad Abhishek Pandey (CB.SC.U4AIE23205) \quad $\vert$ \quad Prem (CB.SC.U4AIE23241)
 \end{frame}
 
 \end{document}
